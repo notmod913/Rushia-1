@@ -5,7 +5,9 @@ const {
   Collection, 
   Events, 
   PermissionsBitField,
-  ActivityType
+  ActivityType,
+  REST,
+  Routes
 } = require('discord.js');
 const fs = require('fs');
 const path = require('path');
@@ -135,12 +137,45 @@ Use \`/help\` for detailed setup guide.
   }
 });
 
+// Deploy slash commands function
+async function deployCommands() {
+  const commands = [];
+  const commandsPath = path.join(__dirname, 'commands');
+  const commandFiles = fs.readdirSync(commandsPath).filter(f => f.endsWith('.js'));
+
+  for (const file of commandFiles) {
+    const command = require(path.join(commandsPath, file));
+    if (!command.data) {
+      console.error(`❌ Command ${file} is missing data export`);
+      continue;
+    }
+    commands.push(command.data.toJSON());
+  }
+
+  const rest = new REST({ version: '10' }).setToken(process.env.BOT_TOKEN);
+
+  try {
+    console.log(`🔄 Deploying ${commands.length} slash commands...`);
+    await rest.put(
+      Routes.applicationCommands(process.env.CLIENT_ID),
+      { body: commands }
+    );
+    console.log('✅ Successfully deployed slash commands.');
+  } catch (error) {
+    console.error('❌ Failed to deploy commands:', error);
+    throw error;
+  }
+}
+
 // Connect to MongoDB and login the bot
 (async () => {
   try {
     await DatabaseManager.connect();
     await DatabaseManager.createIndexes();
     await initializeLogsDB();
+    
+    // Deploy commands before starting bot
+    await deployCommands();
     
     // Schedule daily cleanup
     setInterval(() => {
