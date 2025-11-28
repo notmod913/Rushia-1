@@ -4,6 +4,8 @@ const { BOT_OWNER_ID } = require('../config/constants');
 async function processPingNotification(message) {
   // Check if the bot owner is mentioned in the message
   if (!message.mentions.users.has(BOT_OWNER_ID)) return;
+
+  if (message.author.bot) return; 
   
   // Don't process if it's the bot owner's own message
   if (message.author.id === BOT_OWNER_ID) return;
