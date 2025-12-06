@@ -118,12 +118,12 @@ function buildCommandPreview(userData) {
   let command = `<@${LUVI_BOT_ID}> inv`;
   
   if (userData.selectedNames.length > 0) {
-    command += ` -name ${userData.selectedNames.join(' ')}`;
+    command += ` -name ${userData.selectedNames.join(',')}`;
   }
   
   Object.entries(userData.selectedFields).forEach(([key, values]) => {
     if (values.length > 0) {
-      command += ` -${key} ${values.join(' ')}`;
+      command += ` -${key} ${values.join(',')}`;
     }
   });
   
