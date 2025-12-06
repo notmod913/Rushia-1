@@ -1,5 +1,6 @@
 const { sendLog } = require('../utils/logger');
 const { BOT_OWNER_ID } = require('../config/constants');
+const { isPingEnabled } = require('./pingToggleSystem');
 
 async function processPingNotification(message) {
   // Check if the bot owner is mentioned in the message
@@ -7,8 +8,15 @@ async function processPingNotification(message) {
   
   // Don't process if it's the bot owner's own message
   if (message.author.id === BOT_OWNER_ID) return;
-
+  
+  // Don't process if it's from the bot itself
   if (message.author.bot) return;
+  
+  // Check if bot owner has pings enabled
+  if (!isPingEnabled()) {
+    await message.react('🔕');
+    return;
+  }
   
   try {
     // React with custom emoji to acknowledge the ping
