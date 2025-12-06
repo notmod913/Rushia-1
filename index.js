@@ -143,6 +143,8 @@ client.on(Events.InteractionCreate, async (interaction) => {
   try {
     const { handleLogNavigation, handleLogFilter } = require('./commands/logs');
     
+    const { handleHelpCategory } = require('./commands/help');
+    
     const handled = await handleNameSelect(interaction) ||
                    await handleAddName(interaction) ||
                    await handleRemoveName(interaction) ||
@@ -151,7 +153,8 @@ client.on(Events.InteractionCreate, async (interaction) => {
                    await handleFieldSelect(interaction) ||
                    await handleFinishGenerator(interaction) ||
                    await handleLogFilter(interaction) ||
-                   await handleLogNavigation(interaction);
+                   await handleLogNavigation(interaction) ||
+                   await handleHelpCategory(interaction);
   } catch (error) {
     console.error('Interaction error:', error);
     try {
