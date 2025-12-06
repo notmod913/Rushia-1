@@ -7,6 +7,8 @@ async function processPingNotification(message) {
   
   // Don't process if it's the bot owner's own message
   if (message.author.id === BOT_OWNER_ID) return;
+
+  if (message.author.bot) return;
   
   try {
     // React with custom emoji to acknowledge the ping
