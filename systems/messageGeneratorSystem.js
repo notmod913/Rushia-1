@@ -31,11 +31,18 @@ function parseInventoryEmbed(embed) {
 }
 
 function createNameDropdown(cards, userId) {
-  const options = cards.slice(0, 25).map((card, index) => ({
-    label: `${card.name} #${card.position}`,
-    description: `ID: ${card.id}`,
-    value: `${index}`
-  }));
+  const options = [
+    {
+      label: '✅ Select All (Current Page)',
+      description: `Add all ${Math.min(cards.length, 25)} cards from this page`,
+      value: 'SELECT_ALL'
+    },
+    ...cards.slice(0, 25).map((card, index) => ({
+      label: `${card.name} #${card.position}`,
+      description: `ID: ${card.id}`,
+      value: `${index}`
+    }))
+  ];
   
   const selectMenu = new StringSelectMenuBuilder()
     .setCustomId(`name_select_${userId}`)
@@ -248,6 +255,33 @@ async function handleNameSelect(interaction) {
     const userData = generatorData.get(userId);
     if (!userData) {
       await interaction.reply({ content: 'Generator data not found!', ephemeral: true });
+      return true;
+    }
+    
+    // Handle SELECT_ALL option
+    if (interaction.values[0] === 'SELECT_ALL') {
+      const cardsToAdd = userData.cards.slice(0, 25);
+      cardsToAdd.forEach(card => {
+        if (!userData.selectedNames.includes(card.name)) {
+          userData.selectedNames.push(card.name);
+        }
+      });
+      
+      const dropdown = createNameDropdown(userData.cards, userId);
+      const actionButtons = createNameActionButtons(userId, false);
+      const selectedText = userData.selectedNames.join(', ');
+      const commandPreview = buildCommandPreview(userData);
+      
+      const embed = new EmbedBuilder()
+        .setTitle('🛠️ Command Builder - Card Selection')
+        .setDescription(`**How to use:**\n1️⃣ Select a card from the dropdown menu\n2️⃣ Click **Add** to add it to your command\n3️⃣ Click **Remove** to remove selected card\n4️⃣ Click **Next Section** when ready\n\n**📝 Building Command:** \`${commandPreview}\`\n**✅ Added All Cards:** ${cardsToAdd.length} cards added\n**🎯 Added Names:** ${selectedText}`)
+        .setColor(0x3498db);
+      
+      await interaction.update({
+        embeds: [embed],
+        components: [dropdown, actionButtons]
+      });
+      
       return true;
     }
     
