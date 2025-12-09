@@ -71,15 +71,59 @@ function createResultsEmbed(results, userId) {
 module.exports = {
   // Handle card search from mentions
   handleSearch: async (message, query) => {
-    // Show loading skeleton
+    // Check if query contains commas (multiple searches)
+    if (query.includes(',')) {
+      const queries = query.split(',').map(q => q.trim()).filter(q => q.length > 0);
+      
+      const loadingEmbed = new EmbedBuilder()
+        .setTitle('🔍 Searching Multiple Cards...')
+        .setDescription(`\`\`\`\n▓▓▓░░░░░░░ Searching ${queries.length} cards...\n\`\`\``)
+        .setColor(0x808080);
+      
+      const loadingMsg = await message.reply({ embeds: [loadingEmbed] });
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      const allResults = [];
+      for (const q of queries) {
+        const results = searchCards(q);
+        if (results.length > 0) {
+          allResults.push({ query: q, card: results[0] });
+        } else {
+          allResults.push({ query: q, card: null });
+        }
+      }
+      
+      const embed = new EmbedBuilder()
+        .setTitle(`📋 Search Results (${allResults.length} queries)`)
+        .setColor(0x00ff00);
+      
+      for (const result of allResults) {
+        if (result.card) {
+          embed.addFields({
+            name: `✅ ${result.query}`,
+            value: `**${result.card.name}**\n${result.card.series} | ${result.card.element} ${result.card.role}`,
+            inline: false
+          });
+        } else {
+          embed.addFields({
+            name: `❌ ${result.query}`,
+            value: 'No card found',
+            inline: false
+          });
+        }
+      }
+      
+      await loadingMsg.edit({ embeds: [embed] });
+      return;
+    }
+    
+    // Single search (original behavior)
     const loadingEmbed = new EmbedBuilder()
       .setTitle('🔍 Searching...')
       .setDescription('```\n▓▓▓░░░░░░░ Searching cards...\n```')
       .setColor(0x808080);
     
     const loadingMsg = await message.reply({ embeds: [loadingEmbed] });
-    
-    // Simulate processing time for smooth UX
     await new Promise(resolve => setTimeout(resolve, 500));
     
     const results = searchCards(query);
