@@ -61,6 +61,7 @@ const { processCardMessage } = require('./systems/cardPingSystem');
 const { processStaminaMessage } = require('./systems/staminaReminderSystem');
 const { processExpeditionMessage } = require('./systems/expeditionReminderSystem');
 const { processRaidMessage } = require('./systems/raidReminderSystem');
+const { processRaidSpawnMessage } = require('./systems/raidSpawnReminderSystem');
 
 
 
@@ -109,6 +110,7 @@ client.on(Events.MessageCreate, async (message) => {
   await processStaminaMessage(message);
   await processExpeditionMessage(message);
   await processRaidMessage(message);
+  await processRaidSpawnMessage(message);
   await processBossMessage(message);
   await processCardMessage(message);
 
