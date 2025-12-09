@@ -20,7 +20,7 @@ async function processRaidSpawnMessage(message) {
         channelId: message.channel.id,
         remindAt,
         type: 'raidSpawn',
-        reminderMessage: `<@${userId}>, 30 minutes have passed since the raid spawned!\n-# Time to check if the raid is still available.`
+        reminderMessage: `<@${userId}>,You can now use </raid spawn:1404667045332910220> to spawn a new raid boss!`,
       });
       
       await sendLog(`[RAID SPAWN REMINDER SET] User: ${userId}, Channel: ${message.channel.id}, Message ID: ${message.id}, Message Link: ${message.url}`);
