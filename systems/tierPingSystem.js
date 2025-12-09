@@ -12,12 +12,30 @@ async function processBossMessage(message) {
   const bossInfo = parseBossEmbed(embed);
   if (!bossInfo) return;
 
-  const bossRole = settings.bossRoleId;
+  let roleId = null;
+  
+  // Check if multi-role system is enabled
+  if (settings.multiRoleEnabled) {
+    // Map tier to role field
+    const tierMap = {
+      'Tier 1': 'tier1RoleId',
+      'Tier 2': 'tier2RoleId',
+      'Tier 3': 'tier3RoleId'
+    };
+    
+    const roleField = tierMap[bossInfo.tier];
+    if (roleField) {
+      roleId = settings[roleField];
+    }
+  } else {
+    // Use legacy single role
+    roleId = settings.bossRoleId;
+  }
 
-  if (bossRole) {
+  if (roleId) {
     try {
-      const content = `<@&${bossRole}> **${bossInfo.tier} Boss Spawned!**\nBoss: **${bossInfo.bossName}**`;
-      await message.channel.send({ content, allowedMentions: { roles: [bossRole] } });
+      const content = `<@&${roleId}> **${bossInfo.tier} Boss Spawned!**\nBoss: **${bossInfo.bossName}**`;
+      await message.channel.send({ content, allowedMentions: { roles: [roleId] } });
       await sendLog(`[BOSS DETECTED] ${bossInfo.bossName} (${bossInfo.tier}) in guild ${message.guild.name}`);
     } catch (err) {
       console.error(`[ERROR] Failed to send boss ping: ${err.message}`, err);
