@@ -126,9 +126,19 @@ function parseRaidViewEmbed(embed) {
   return fatiguedUsers.length > 0 ? fatiguedUsers : null;
 }
 
+function parseRaidSpawnEmbed(embed) {
+  if (!embed || !embed.title) return null;
+  
+  // Check if title contains "Raid Spawned!"
+  if (!embed.title.includes('Raid Spawned!')) return null;
+  
+  return { raidSpawned: true };
+}
+
 module.exports = {
   parseBossEmbed,
   parseCardEmbed,
   parseExpeditionEmbed,
   parseRaidViewEmbed,
+  parseRaidSpawnEmbed,
 };
