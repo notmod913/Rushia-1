@@ -12,10 +12,32 @@ async function processCardMessage(message) {
   const cardInfo = parseCardEmbed(embed);
   if (!cardInfo) return;
 
-  if (settings.cardPingId) {
+  let roleId = null;
+  
+  // Check if multi-role system is enabled
+  if (settings.multiRoleEnabled) {
+    // Map rarity to role field
+    const rarityMap = {
+      'Common': 'commonRoleId',
+      'Uncommon': 'uncommonRoleId',
+      'Rare': 'rareRoleId',
+      'Exotic': 'exoticRoleId',
+      'Legendary': 'legendaryRoleId'
+    };
+    
+    const roleField = rarityMap[cardInfo.rarity];
+    if (roleField) {
+      roleId = settings[roleField];
+    }
+  } else {
+    // Use legacy single role
+    roleId = settings.cardPingId;
+  }
+
+  if (roleId) {
     try {
-      const content = `<@&${settings.cardPingId}> A **${cardInfo.rarity}** card just spawned!\n**${cardInfo.cardName}** from *${cardInfo.seriesName}*`;
-      await message.channel.send({ content, allowedMentions: { roles: [settings.cardPingId] } });
+      const content = `<@&${roleId}> A **${cardInfo.rarity}** card just spawned!\n**${cardInfo.cardName}** from *${cardInfo.seriesName}*`;
+      await message.channel.send({ content, allowedMentions: { roles: [roleId] } });
       await sendLog(`[CARD DETECTED] ${cardInfo.cardName} (${cardInfo.rarity}) from ${cardInfo.seriesName} in guild ${message.guild.name}`);
     } catch (err) {
       console.error(`[ERROR] Failed to send card ping: ${err.message}`, err);
