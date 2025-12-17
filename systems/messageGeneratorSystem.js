@@ -133,13 +133,34 @@ async function processInventoryMessage(message) {
 
 async function processInventoryEmbed(message) {
   const embed = message.embeds[0];
-  if (!embed.title || !embed.title.includes('<:LU_Inventory:') || !embed.title.includes("'s Inventory")) return;
-  try {
-    await message.react('🔍');
-    await message.react('🆔');
-  } catch (error) {
-    console.error('Failed to react to inventory:', error);
+  if (!embed.title) return;
+  
+  if (embed.title.includes('<:LU_Inventory:') && embed.title.includes("'s Inventory")) {
+    try {
+      await message.react('🔍');
+    } catch (error) {
+      console.error('Failed to react to inventory:', error);
+    }
+  } else if (embed.title.includes('Team')) {
+    try {
+      await message.react('🆔');
+    } catch (error) {
+      console.error('Failed to react to team:', error);
+    }
   }
+}
+
+function parseTeamEmbed(embed) {
+  const ids = [];
+  const text = embed.description || '';
+  const matches = text.match(/ID:\s*`(\d+)`/g);
+  if (matches) {
+    matches.forEach(match => {
+      const id = match.match(/\d+/)[0];
+      ids.push(id);
+    });
+  }
+  return ids;
 }
 
 async function handleGeneratorReaction(reaction, user) {
@@ -203,30 +224,28 @@ async function handleIDExtractorReaction(reaction, user) {
   const message = reaction.message;
   if (!message.embeds.length) return;
   const embed = message.embeds[0];
-  if (!embed.title || !embed.title.includes('<:LU_Inventory:') || !embed.title.includes("'s Inventory")) return;
-  const usernameMatch = embed.title.match(/<:LU_Inventory:[^>]+>\s*(.+?)'s Inventory/);
-  if (!usernameMatch) return;
-  const inventoryUsername = usernameMatch[1];
-  if (user.username !== inventoryUsername) return;
   try {
     await reaction.users.remove(user);
     await reaction.users.remove(reaction.client.user);
   } catch (error) {
     console.error('Failed to remove reactions:', error);
   }
-  const cards = parseInventoryEmbed(embed);
-  if (!cards.length) return;
-  generatorData.set(`idextractor_${user.id}`, {
-    cards,
-    allIds: cards.map(card => card.id),
-    inventoryMessageId: message.id,
-    inventoryChannelId: message.channel.id
-  });
-  const idList = cards.map(card => card.id).join(',');
+  
+  let ids = [];
+  if (embed.title && embed.title.includes('<:LU_Inventory:') && embed.title.includes("'s Inventory")) {
+    const cards = parseInventoryEmbed(embed);
+    if (!cards.length) return;
+    ids = cards.map(card => card.id);
+  } else if (embed.title && embed.title.includes('Team')) {
+    ids = parseTeamEmbed(embed);
+    if (!ids.length) return;
+  } else {
+    return;
+  }
+  
+  const idList = ids.join(',');
   try {
-    const idMessage = await message.channel.send(idList || 'No cards');
-    generatorData.set(`idmessage_${user.id}`, idMessage);
-    startIDWatcher(user.id, message);
+    await message.channel.send(idList || 'No cards');
   } catch (error) {
     console.error('Failed to send ID list:', error);
   }
